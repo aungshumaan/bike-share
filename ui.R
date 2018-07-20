@@ -1,6 +1,7 @@
 library(shiny)
 
 stations <- read.csv(file = "./sf-bay-area-bike-share/station.csv")
+
 fluidPage(
     titlePanel("SF Bay Area Bike Share"),
     sidebarLayout(
@@ -12,10 +13,14 @@ fluidPage(
             selectizeInput(inputId = "city",
                            label = "City",
                            choices = unique(stations$city),
-                           selected = '')
+                           selected = 'San Francisco')
         ),
         mainPanel(
-            plotOutput("dock_countPlot")
+            leafletOutput("mymap"),
+            plotOutput("dock_countPlot"),
+            plotOutput("dock_PiePlot"),
+            plotOutput("dock_countBycityPlot")
+           
         )
     )
 )
