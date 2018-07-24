@@ -103,6 +103,43 @@ function(input, output, session) {
             theme_bw() 
         
     )
+    output$trip_hourPlot = renderPlot(
+        trips %>% group_by(h = hour(trips$start_date)) %>% 
+            summarise(N = n()) %>% ggplot(aes(x=h, y =N)) + 
+            geom_bar(stat="identity", fill="steelblue") + 
+            labs(x='hour of the day',y='number of trips')
+    )
+    
+    #output$trip_durationPlot = renderPlot(
+    #    ggplot(data = trips %>% filter(duration < 3600) , aes(x=duration))+
+    #        geom_freqpoly( binwidth = 60, aes(color=month))
+    #)
+    
+    output$trip_seasonPlot = renderPlot(
+        ggplot(data = trips %>% filter(duration < 3600) , aes(x=duration))+
+            geom_freqpoly( binwidth = 60, aes(color=season))
+    )
+    output$trip_dayPlot = renderPlot(
+        trips %>% group_by(start_day) %>% summarise(N = n()) %>% 
+            ggplot(aes(x=start_day, y =N))+ geom_point()
+            #geom_bar(stat='identity') 
+    )
+    output$trip_weekendPlot = renderPlot(
+        trips %>% group_by(start_day,isWeekend) %>% summarise(N = n()) %>% 
+            ggplot(aes(x=start_day, y =N))+ geom_point(aes(color=as.factor(isWeekend)))
+    )
+    output$trip_weekend2Plot = renderPlot(
+        trips %>% filter(isWeekend==T) %>% group_by(start_day,isWeekend) %>% summarise(N = n()) %>% 
+            ggplot(aes(x=start_day, y =N))+ geom_bar(stat='identity')
+        
+    )
+    
+    
+    output$trip_subscriptionPlot = renderPlot(
+        trips %>% group_by(subscription_type, season) %>% summarise(N = n()) %>% 
+            ggplot(aes(x=season,y=N))+
+            geom_col(aes(fill=subscription_type),position = 'dodge')
+    )
     output$dock_countPlot = renderPlot(
     stations %>% group_by(city) %>% 
         summarise(N = n()) %>% 

@@ -25,7 +25,13 @@ fluidPage(
                         max =max(as.Date(trips$start_date)),
                         value = c(min(as.Date(trips$start_date)),
                                   max(as.Date(trips$start_date)))
-                        )
+                        ),
+            sliderInput(inputId = 'hour',
+                        label = 'Hour of the day',
+                        min =0,
+                        max =24,
+                        value = c(0,24)
+            )
             
             
             
@@ -47,9 +53,16 @@ fluidPage(
             #plotOutput("dock_PiePlot"),
             textOutput("min_maxdate"),
             leafletOutput("mymap_freq"),
-            h3("Choose a station to see where most trips go!!"),
+            h3("Choose a station to see where most trips go."),
             leafletOutput("mymap_endfreq"),
-            plotOutput("endfreqPlot")
+            plotOutput("endfreqPlot"),
+            plotOutput("trip_hourPlot"),
+            #plotOutput("trip_durationPlot"),
+            plotOutput("trip_seasonPlot"),
+            #plotOutput("trip_dayPlot"), 
+            plotOutput("trip_weekendPlot"), 
+            #plotOutput("trip_weekend2Plot"), 
+            plotOutput("trip_subscriptionPlot")
            
         )
     )
