@@ -36,16 +36,17 @@ function(input, output, session) {
             theme_bw() 
         
     )
+    output$min_maxdate <- renderText({ 
+        paste("   You have chosen a date range that goes from",
+              input$date[1], "to", input$date[2])
+    })
     stafreq <- reactive({
-        trips %>% filter(city  %in% input$cityGroup) %>% 
-            filter(as.Date(start_date) %in% input$date[1]:input$date[2]) %>%
+        trips %>% filter(city  == input$city) %>% 
+            #filter(start_day > input$date[1] & start_day < input$date[2]) %>%
             group_by(start_station_name, long, lat) %>%
             summarise(N =n())
     })
-    output$min_maxdate <- renderText({ 
-        paste("You have chosen a date range that goes from",
-              input$date[1], "to", input$date[2])
-    })
+    
     # map of trip frequency
     output$mymap_freq <- renderLeaflet({
         Long  = ( stafreq()  )$long
@@ -70,7 +71,7 @@ function(input, output, session) {
     output$mymap_endfreq <- renderLeaflet({
         
         df = trips %>% filter(start_station_name == input$name) %>% 
-            filter(as.Date(start_date) %in% input$date[1]:input$date[2]) %>%
+            #filter(start_day > input$date[1] & start_day < input$date[2]) %>%
             group_by(end_station_name) %>%
             summarise(N =n())
         df2  = left_join( df, stations, by =c('end_station_name'='name')) 
@@ -91,7 +92,7 @@ function(input, output, session) {
     })
     output$endfreqPlot = renderPlot(
         trips %>% filter(start_station_name == input$name) %>%  
-            filter(as.Date(start_date) %in% input$date[1]:input$date[2]) %>%
+            #filter(start_day > input$date[1] & start_day < input$date[2]) %>%
             group_by(end_station_name) %>%
             summarise(N =n()) %>%
             ggplot(aes(x =reorder(end_station_name,N), y =N)) + 
@@ -99,63 +100,85 @@ function(input, output, session) {
             ylab("number of trips") +
             coord_flip() +
             theme(legend.key=element_blank(), legend.position="bottom") +
-            #scale_fill_brewer(palette = 'Set1') +
             theme_bw() 
         
     )
-    output$trip_hourPlot = renderPlot(
-        trips %>% group_by(h = hour(trips$start_date)) %>% 
-            summarise(N = n()) %>% ggplot(aes(x=h, y =N)) + 
-            geom_bar(stat="identity", fill="steelblue") + 
-            labs(x='hour of the day',y='number of trips')
-    )
+    
     
     #output$trip_durationPlot = renderPlot(
     #    ggplot(data = trips %>% filter(duration < 3600) , aes(x=duration))+
     #        geom_freqpoly( binwidth = 60, aes(color=month))
     #)
     
+    bla <- reactive({
+    trips %>% 
+        filter(duration < 3600) %>%
+        #filter(hour(start_date) > input$hour[1] & hour(start_date) < input$hour[2]) %>%
+        filter(duration > input$dur[1]*60 & duration < input$dur[2]*60)
+    })
+    
     output$trip_seasonPlot = renderPlot(
-        ggplot(data = trips %>% filter(duration < 3600) , aes(x=duration))+
-            geom_freqpoly( binwidth = 60, aes(color=season))
+        bla() %>%
+        ggplot( aes(x=duration)) +
+            geom_freqpoly( binwidth = 60, aes(color=season)) + 
+            labs(y='Number of trips')
     )
-    output$trip_dayPlot = renderPlot(
-        trips %>% group_by(start_day) %>% summarise(N = n()) %>% 
-            ggplot(aes(x=start_day, y =N))+ geom_point()
-            #geom_bar(stat='identity') 
-    )
-    output$trip_weekendPlot = renderPlot(
-        trips %>% group_by(start_day,isWeekend) %>% summarise(N = n()) %>% 
-            ggplot(aes(x=start_day, y =N))+ geom_point(aes(color=as.factor(isWeekend)))
-    )
-    output$trip_weekend2Plot = renderPlot(
-        trips %>% filter(isWeekend==T) %>% group_by(start_day,isWeekend) %>% summarise(N = n()) %>% 
-            ggplot(aes(x=start_day, y =N))+ geom_bar(stat='identity')
-        
-    )
-    
-    
     output$trip_subscriptionPlot = renderPlot(
-        trips %>% group_by(subscription_type, season) %>% summarise(N = n()) %>% 
+        bla() %>%
+            group_by(subscription_type, season) %>% summarise(N = n()) %>% 
             ggplot(aes(x=season,y=N))+
-            geom_col(aes(fill=subscription_type),position = 'dodge')
+            geom_col(aes(fill=subscription_type),position = 'dodge') +
+            labs(y='Number of trips') +
+            theme(legend.position="bottom")+
+            scale_fill_discrete(name="User type",
+                                breaks=c("Subscriber", "Customer"),
+                                labels=c("Subscription", "Pay-as-you-go"))
     )
-    output$dock_countPlot = renderPlot(
-    stations %>% group_by(city) %>% 
-        summarise(N = n()) %>% 
-        ggplot(aes(x=reorder(city,-N), y = N))+ 
-        geom_bar(stat="identity", fill="steelblue") + 
-        labs(x='city',y='number of stations')
+    
+    output$trip_weekendPlot = renderPlot(
+        trips_weekend %>% 
+            ggplot(aes(x=date, y =N))+ geom_point(aes(color=Weekend)) +
+            labs(y ='Number of trips') + 
+            theme( legend.key=element_blank(), legend.position="bottom") +
+            scale_fill_discrete(name="bla")
+           
     )
-    output$dock_PiePlot = renderPlot(
-    stations %>% group_by(city) %>% 
-        summarise(N = n()) %>% 
-    ggplot(aes(x="", y = N, fill=city))+ 
-        geom_bar(width =1, #width = 0.9 (default) leaves a hole at the center.
-                 stat="identity", position = "stack") + 
-        coord_polar("y") #+ theme_economist()
-        
+    output$trip_hourPlot = renderPlot(
+        trips_hour %>% ggplot(aes(x=h, y =N)) + 
+            geom_bar(stat="identity", fill="steelblue") + 
+            labs(x='hour of the day',y='number of trips')
     )
+    
+    
+    #output$trip_dayPlot = renderPlot(
+    #    trips %>% group_by(start_day) %>% summarise(N = n()) %>% 
+    #        ggplot(aes(x=start_day, y =N))+ geom_point()
+    #    #geom_bar(stat='identity') 
+    #)
+    #output$trip_weekend2Plot = renderPlot(
+    #    trips %>% filter(isWeekend==T) %>% group_by(start_day,isWeekend) %>% summarise(N = n()) %>% 
+    #        ggplot(aes(x=start_day, y =N))+ geom_bar(stat='identity')
+    #    
+    #)
+    
+    
+    
+    #output$dock_countPlot = renderPlot(
+    #stations %>% group_by(city) %>% 
+    #    summarise(N = n()) %>% 
+    #    ggplot(aes(x=reorder(city,-N), y = N))+ 
+    #    geom_bar(stat="identity", fill="steelblue") + 
+    #    labs(x='city',y='number of stations')
+    #)
+    #output$dock_PiePlot = renderPlot(
+    #stations %>% group_by(city) %>% 
+    #    summarise(N = n()) %>% 
+    #ggplot(aes(x="", y = N, fill=city))+ 
+    #    geom_bar(width =1, #width = 0.9 (default) leaves a hole at the center.
+    #             stat="identity", position = "stack") + 
+    #    coord_polar("y") #+ theme_economist()
+    #    
+    #)
     
     #output$mymap_bla <- renderLeaflet({
     #    leaflet() %>%
