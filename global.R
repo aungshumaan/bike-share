@@ -15,6 +15,9 @@ trips$month = month(trips$start_date, label =T) # label=T --> month names as cha
 trips$season = as.factor(ifelse(trips$month %in% c('Dec','Jan','Feb'),'Winter',
                                 ifelse(trips$month %in% c('Mar','Apr','May'),'Spring',
                                        ifelse(trips$month %in% c('Jun','Jul','Aug'),'Summer','Fall'))))
+
+trips$season = ordered(trips$season, levels = c("Spring","Summer","Fall","Winter"))
+
 trips$Weekend = as.factor(ifelse(wday(trips$start_day, label = T) %in% c('Sat','Sun'), "Weekend", "Weekday"))
 
 #trips_hour = trips %>% group_by(h = hour(trips$start_date)) %>% 

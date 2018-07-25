@@ -146,9 +146,11 @@ function(input, output, session) {
             group_by(date = start_day,Weekend) %>% 
             summarise(N = n()) %>%
             ggplot(aes(x=date, y =N))+ geom_point(aes(color=Weekend)) +
+            geom_smooth(method = 'gam',aes(color=Weekend)) +
             labs(y ='Number of trips') + 
             theme( legend.key=element_blank(), legend.position="bottom") +
-            scale_fill_discrete(name="bla")
+            scale_color_discrete(name="", breaks=c('Weekday', 'Weekend'),
+                                labels=c("Weekday", "Weekend"))
            
     )
     output$trip_hourPlot = renderPlot(
