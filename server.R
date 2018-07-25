@@ -29,7 +29,8 @@ function(input, output, session) {
         stations %>% filter(city %in% input$cityGroup) %>% 
             ggplot(aes(x =reorder(name,dock_count), y =dock_count)) + 
             geom_bar(stat="identity", fill="red") +
-            ylab("number of docks") +
+            ylab("Number of docks") +
+            xlab("Name of city")+
             coord_flip() +
             theme(legend.key=element_blank(), legend.position="bottom") +
             #scale_fill_brewer(palette = 'Set1') +
@@ -41,8 +42,10 @@ function(input, output, session) {
               input$date[1], "to", input$date[2])
     })
     stafreq <- reactive({
-        trips %>% filter(city  == input$city) %>% 
-            #filter(start_day > input$date[1] & start_day < input$date[2]) %>%
+        trips %>% 
+            filter(city  == input$city) %>% 
+            filter(start_day >= input$date2[1] & start_day <= input$date2[2]) %>%
+            filter(hour(start_date) >= input$hour2[1] & hour(start_date) <= input$hour2[2]) %>%
             group_by(start_station_name, long, lat) %>%
             summarise(N =n())
     })
@@ -97,7 +100,8 @@ function(input, output, session) {
             summarise(N =n()) %>%
             ggplot(aes(x =reorder(end_station_name,N), y =N)) + 
             geom_bar(stat="identity", fill="red") +
-            ylab("number of trips") +
+            ylab("Number of trips") +
+            xlab("Name of station") +
             coord_flip() +
             theme(legend.key=element_blank(), legend.position="bottom") +
             theme_bw() 
@@ -113,7 +117,7 @@ function(input, output, session) {
     bla <- reactive({
     trips %>% 
         filter(duration < 3600) %>%
-        #filter(hour(start_date) > input$hour[1] & hour(start_date) < input$hour[2]) %>%
+        filter(hour(start_date) >= input$hour[1] & hour(start_date) <= input$hour[2]) %>%
         filter(duration > input$dur[1]*60 & duration < input$dur[2]*60)
     })
     
@@ -136,7 +140,11 @@ function(input, output, session) {
     )
     
     output$trip_weekendPlot = renderPlot(
-        trips_weekend %>% 
+        #trips_weekend %>% 
+        trips %>% 
+            filter(start_day >= input$date[1] & start_day <= input$date[2]) %>% 
+            group_by(date = start_day,Weekend) %>% 
+            summarise(N = n()) %>%
             ggplot(aes(x=date, y =N))+ geom_point(aes(color=Weekend)) +
             labs(y ='Number of trips') + 
             theme( legend.key=element_blank(), legend.position="bottom") +
@@ -144,7 +152,11 @@ function(input, output, session) {
            
     )
     output$trip_hourPlot = renderPlot(
-        trips_hour %>% ggplot(aes(x=h, y =N)) + 
+        #trips_hour %>% 
+        trips %>% group_by(h = hour(trips$start_date)) %>% 
+            filter(start_day >= input$date[1] & start_day <= input$date[2]) %>%
+            summarise(N = n()) %>% 
+            ggplot(aes(x=h, y =N)) + 
             geom_bar(stat="identity", fill="steelblue") + 
             labs(x='hour of the day',y='number of trips')
     )

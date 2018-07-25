@@ -10,9 +10,10 @@ dashboardPage(
         sidebarMenu(
          
             menuItem("Stations", tabName = "Page1"),
-            menuItem("Trips", tabName = "Page2"),
-            menuItem("page3", tabName = "Page3"),
-            menuItem("page4", tabName = "Page4")
+            menuItem("Trip frequency", tabName = "Page2"),
+            menuItem("Station connections", tabName = "Page3"),
+            menuItem("Trip duration", tabName = "Page4"),
+            menuItem("Variation of trip frequency", tabName = "Page5")
             )
         
         
@@ -40,14 +41,32 @@ dashboardPage(
                 fluidRow(
                     #textOutput("min_maxdate"),
                     box(leafletOutput("mymap_freq")),
-                    box(leafletOutput("mymap_endfreq")), 
-                    box(plotOutput("endfreqPlot")),
                     box(selectizeInput(inputId = "city",
                                        label = "City",
                                        choices = unique(stations$city),
                                        selected = 'San Francisco'
                                        )
                         ),
+                    box(sliderInput(inputId = 'hour2',
+                                label = 'Hour of the day',
+                                min =0,
+                                max =24,
+                                value = c(0,24)
+                        )
+                    ),
+                    box(sliderInput(inputId = 'date2',
+                                label = 'Date range',
+                                min =min(trips$start_day),
+                                max =max(trips$start_day),
+                                value = c(min(trips$start_day),max(trips$start_day))
+                            )
+                        )
+                    )
+                ),
+            tabItem(tabName = "Page3",  
+                fluidRow(
+                    box(leafletOutput("mymap_endfreq")), 
+                    box(plotOutput("endfreqPlot")),
                     box(selectizeInput(inputId = "name",
                                        label = "Station",
                                        choices = unique(stations$name),
@@ -70,7 +89,7 @@ dashboardPage(
                 )
             ),
             
-            tabItem(tabName = "Page3",
+            tabItem(tabName = "Page4",
                 fluidRow(
                     box(plotOutput("trip_seasonPlot")),
                     box(plotOutput("trip_subscriptionPlot")),
@@ -89,10 +108,16 @@ dashboardPage(
                     
                 )
             ),
-            tabItem(tabName = "Page4",
+            tabItem(tabName = "Page5",
                     fluidRow(
                         box(plotOutput("trip_weekendPlot")), 
-                        box(plotOutput("trip_hourPlot"))
+                        box(plotOutput("trip_hourPlot")),
+                        box(sliderInput(inputId = 'date',
+                                        label = 'Date range',
+                                        min =min(trips$start_day),
+                                        max =max(trips$start_day),
+                                        value = c(min(trips$start_day),max(trips$start_day))
+                        ))
                     ))
            
            

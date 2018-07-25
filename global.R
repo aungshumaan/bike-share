@@ -17,13 +17,10 @@ trips$season = as.factor(ifelse(trips$month %in% c('Dec','Jan','Feb'),'Winter',
                                        ifelse(trips$month %in% c('Jun','Jul','Aug'),'Summer','Fall'))))
 trips$Weekend = as.factor(ifelse(wday(trips$start_day, label = T) %in% c('Sat','Sun'), "Weekend", "Weekday"))
 
-trips_hour = trips %>% group_by(h = hour(trips$start_date)) %>% 
-    summarise(N = n())
-#trips_hour = read.csv('./sf-bay-area-bike-share/trip_hour.csv', stringsAsFactors = T)
+#trips_hour = trips %>% group_by(h = hour(trips$start_date)) %>% 
+#    summarise(N = n())
 
-trips_weekend = trips %>% 
-    group_by(date = start_day,Weekend) %>% 
-    summarise(N = n()) 
+#trips_weekend = trips %>% 
+#    group_by(date = start_day,Weekend) %>% 
+#    summarise(N = n()) 
 
-#trips = read.csv(file = "./sf-bay-area-bike-share/trip.csv")
-#trips = read.csv(file = "./sf-bay-area-bike-share/trip_withCity.csv")
